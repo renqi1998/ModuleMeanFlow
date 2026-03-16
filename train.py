@@ -1,4 +1,5 @@
 from dit import DiT
+from comet_ml import Experiment
 import torch
 import torchvision
 from torchvision import transforms as T
@@ -12,7 +13,7 @@ from fid_evaluation import FIDEvaluation
 import os
 os.environ["COMET_API_KEY"] = "0tXk5XHql4WqhBohZ2EI8RqX6"
 
-from comet_ml import Experiment
+
 import os
 import torch.optim as optim
 import torch.nn.functional as F
@@ -131,7 +132,7 @@ def main():
     fid_batches_needed = (fid_subset_size + batch_size - 1) // batch_size
     
     fid_dataset = torchvision.datasets.MNIST(
-        root="/mnt/nvme",
+        root="./",
         train=True,
         download=False,
         transform=transform,
@@ -159,8 +160,9 @@ def main():
         ema_model.eval()
         with torch.no_grad():
             # Use the model's own sampling method
+            # 多步采样（通常是20-50步），追求高质量
             samples = sampler.sample_each_class(ema_model, 10)
-
+            # 一步采样（关键！），验证 Mean Flow 的拉直效果
             sampels_one_step = sampler.sample_each_class(ema_model, 10, sample_steps=1)
             
             # For grayscale images, we need to handle the channel dimension
@@ -254,6 +256,7 @@ def main():
             experiment.log_metric("loss", loss.item(), step=step)
             experiment.log_metric("grad_norm", grad_norm.item(), step=step)
             experiment.log_metric("lambda", current_lambda, step=step)
+            experiment.log_metric("lr", optimizer.param_groups[0]['lr'], step=step)
 
             if step % 100 == 0:
                 avg_loss = sum(losses[-100:]) / min(100, len(losses))
