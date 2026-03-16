@@ -9,8 +9,9 @@ from collections import OrderedDict
 
 from model import MeanFlow
 from fid_evaluation import FIDEvaluation
+import os
+os.environ["COMET_API_KEY"] = "0tXk5XHql4WqhBohZ2EI8RqX6"
 
-import moviepy.editor as mpy
 from comet_ml import Experiment
 import os
 import torch.optim as optim
@@ -29,9 +30,9 @@ def main():
     num_classes = 10  # MNIST has 10 digit classes (0-9)
     
     # Create directories
-    os.makedirs('/mnt/nvme/images_mnist', exist_ok=True)
-    os.makedirs('/mnt/nvme/results_mnist', exist_ok=True)
-    checkpoint_root_path = '/mnt/nvme/checkpoint/dit_mnist/'
+    os.makedirs('./images_mnist', exist_ok=True)
+    os.makedirs('./results_mnist', exist_ok=True)
+    checkpoint_root_path = './checkpoint/dit_mnist/'
     os.makedirs(checkpoint_root_path, exist_ok=True)
     accelerator = Accelerator(mixed_precision='fp16')
 
@@ -69,7 +70,7 @@ def main():
     ])
     
     dataset = torchvision.datasets.MNIST(
-        root="/mnt/nvme/",
+        root="./",
         train=True,
         download=True,
         transform=transform,
@@ -173,9 +174,9 @@ def main():
                 log_img = make_grid(samples, nrow=10, normalize=True, value_range=(-1, 1))
                 log_img_one_step = make_grid(sampels_one_step, nrow=10, normalize=True, value_range=(-1, 1))
             
-            img_save_path = f"/mnt/nvme/images_mnist/step{step}_cfg{cfg_scale}.png"
+            img_save_path = f"./images_mnist/step{step}_cfg{cfg_scale}.png"
             save_image(log_img, img_save_path)
-            img_save_path_one_step = f"/mnt/nvme/images_mnist/step{step}_one_step.png"
+            img_save_path_one_step = f"./images_mnist/step{step}_one_step.png"
             save_image(log_img_one_step, img_save_path_one_step)
             experiment.log_image(
                 img_save_path,
